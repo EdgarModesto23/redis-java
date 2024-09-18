@@ -1,4 +1,6 @@
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -18,19 +20,20 @@ public class Main {
       // SO_REUSEADDR ensures that we don't run into 'Address already in use'
       // errors
       serverSocket.setReuseAddress(true);
-      // Wait for connection from client.
       clientSocket = serverSocket.accept();
+      while (true) {
+        BufferedReader socketReader = new BufferedReader(
+            new InputStreamReader(clientSocket.getInputStream()));
+        if (socketReader.readLine() != null) {
+          clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
+          clientSocket.getOutputStream().flush();
+        } else {
+          clientSocket.close();
+          break;
+        }
+      }
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
-    } finally {
-      try {
-        if (clientSocket != null) {
-          clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
-          clientSocket.close();
-        }
-      } catch (IOException e) {
-        System.out.println("IOException: " + e.getMessage());
-      }
     }
   }
 }
