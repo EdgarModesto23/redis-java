@@ -1,19 +1,13 @@
-import eventloop.event.EventLoop;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.Set;
 
 public class Main {
   public static void main(String[] args) {
@@ -28,7 +22,6 @@ public class Main {
       serverSocket.bind(new InetSocketAddress(port));
       serverSocket.configureBlocking(false);
       serverSocket.register(selector, SelectionKey.OP_ACCEPT);
-      EventLoop event = new EventLoop();
       while (true) {
         selector.select();
         // define a set of selectable keys
