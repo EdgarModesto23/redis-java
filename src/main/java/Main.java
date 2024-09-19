@@ -1,8 +1,19 @@
+import eventloop.event.EventLoop;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
+import java.util.Set;
 
 public class Main {
   public static void main(String[] args) {
@@ -10,30 +21,66 @@ public class Main {
     // when running tests.
     System.out.println("Logs from your program will appear here!");
 
-    //  Uncomment this block to pass the first stage
-    ServerSocket serverSocket = null;
-    Socket clientSocket = null;
-    int port = 6379;
     try {
-      serverSocket = new ServerSocket(port);
-      // Since the tester restarts your program quite often, setting
-      // SO_REUSEADDR ensures that we don't run into 'Address already in use'
-      // errors
-      serverSocket.setReuseAddress(true);
-      clientSocket = serverSocket.accept();
+      Selector selector = Selector.open();
+      ServerSocketChannel serverSocket = ServerSocketChannel.open();
+      int port = 6379;
+      serverSocket.bind(new InetSocketAddress(port));
+      serverSocket.configureBlocking(false);
+      serverSocket.register(selector, SelectionKey.OP_ACCEPT);
+      EventLoop event = new EventLoop();
       while (true) {
-        BufferedReader socketReader = new BufferedReader(
-            new InputStreamReader(clientSocket.getInputStream()));
-        if (socketReader.readLine() != null) {
-          clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
-          clientSocket.getOutputStream().flush();
-        } else {
-          clientSocket.close();
-          break;
+        selector.select();
+        // define a set of selectable keys
+        Iterator<SelectionKey> keyIterator = selector.selectedKeys().iterator();
+
+        // iterate over the selected keys
+        while (keyIterator.hasNext()) {
+          SelectionKey key = keyIterator.next();
+          keyIterator.remove();
+
+          /*if both the server and the client have binded to a port and
+          both are ready to share data with one another isAcceptable()
+          will return true */
+
+          if (key.isAcceptable()) {
+            SocketChannel client = serverSocket.accept();
+
+            client.configureBlocking(false);
+
+            client.register(selector, SelectionKey.OP_READ);
+          }
+          /* if there is any data while is yet to be read by the server
+            isReadable returns true. Note that each operation of sendData() is
+            mapped to a key and only if new data is present and unread
+             isReadable() will return true */
+
+          else if (key.isReadable()) {
+
+            SocketChannel client = (SocketChannel)key.channel();
+
+            ByteBuffer serverBuffer = ByteBuffer.allocate(1024);
+
+            client.read(serverBuffer);
+
+            InputStream in = new ByteArrayInputStream(serverBuffer.array());
+
+            // do something with your data
+            int bytesRead = client.read(serverBuffer);
+
+            if (bytesRead == -1) {
+              client.close();
+            } else {
+              serverBuffer.flip();
+              client.write(ByteBuffer.wrap("+PONG\r\n".getBytes()));
+              serverBuffer.clear();
+            }
+          }
         }
       }
     } catch (IOException e) {
-      System.out.println("IOException: " + e.getMessage());
+      System.out.println(e);
+      return;
     }
   }
 }
