@@ -3,7 +3,7 @@ package eventloop.command;
 public class PingFactory implements CommandFactory {
 
   @Override
-  public Command createCommand() {
+  public AbstractCommand createCommand() {
     return new Ping();
   }
 }
