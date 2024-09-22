@@ -1,9 +1,7 @@
 package eventloop.event;
 
 import eventloop.command.AbstractCommand;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -11,22 +9,33 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import parser.Parser;
 
-public class EventLoop implements EventLoopResults {
+public class EventLoop implements EventLoopResults, Storageable {
   private Selector selector;
   private ServerSocketChannel serverSocket;
-  private Queue<Event> processQueue;
+  private Queue<AbstractEvent> processQueue;
   private Queue<FinishedEvent> resultsQueue;
+  private HashMap<String, String> storage;
 
   public EventLoop(Selector selector, ServerSocketChannel serverSocket) {
     this.selector = selector;
     this.serverSocket = serverSocket;
     this.processQueue = new LinkedList<>();
     this.resultsQueue = new LinkedList<>();
+    this.storage = new HashMap<>();
+  }
+
+  public String getValueFromStorage(String key) {
+    return this.storage.get(key);
+  }
+
+  public void addValueToStorage(String key, String value) {
+    this.storage.put(key, value);
   }
 
   public void pushResultEvent(FinishedEvent event) {
@@ -62,7 +71,7 @@ public class EventLoop implements EventLoopResults {
           }
         }
         if (!this.processQueue.isEmpty()) {
-          Event newEvent = this.processQueue.remove();
+          AbstractEvent newEvent = this.processQueue.remove();
           newEvent.RunAbstractCommand();
         }
         // iterate over the selected keys
@@ -106,7 +115,8 @@ public class EventLoop implements EventLoopResults {
                 AbstractCommand command = Parser.Parse(result);
                 command.setClient(client);
                 command.setEventloop(this);
-                Event newEvent = new Event(command);
+                AbstractEvent newEvent =
+                    new EventFactory().createEvent(command, this);
                 this.processQueue.add(newEvent);
                 serverBuffer.clear();
               } catch (Exception e) {

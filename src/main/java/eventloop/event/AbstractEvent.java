@@ -2,12 +2,10 @@ package eventloop.event;
 
 import eventloop.command.AbstractCommand;
 
-public class Event {
-  private AbstractCommand command;
+public abstract class AbstractEvent {
+  protected AbstractCommand command;
 
-  public Event(AbstractCommand command) { this.command = command; }
-
-  public void RunAbstractCommand() { new Thread(this.command).start(); }
+  public abstract void RunAbstractCommand();
 
   public void setAbstractCommand(AbstractCommand command) {
     this.command = command;
