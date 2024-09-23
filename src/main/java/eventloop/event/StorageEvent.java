@@ -15,6 +15,7 @@ public class StorageEvent extends AbstractEvent {
   @Override
   public void RunAbstractCommand() {
     this.getCommand().setStorageable(storage);
+    System.out.println(this.getCommand().getStorageable());
     new Thread(this.command).start();
   }
 }

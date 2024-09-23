@@ -13,6 +13,6 @@ public class EventFactory {
       event.setCommand(storageCommand);
       return event;
     }
-    return new BaseEvent(command);
+    return new BaseEventFactory().createEvent(command);
   }
 }

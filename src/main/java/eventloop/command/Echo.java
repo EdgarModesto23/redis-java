@@ -3,7 +3,7 @@ package eventloop.command;
 import eventloop.event.FinishedEvent;
 
 public class Echo extends AbstractCommand {
-  private String argument;
+  protected String argument;
 
   public Echo() { this.argument = ""; }
 

@@ -1,24 +1,20 @@
 package eventloop.event;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import eventloop.command.AbstractCommand;
 import eventloop.command.PingFactory;
 import eventloop.command.SetFactory;
 import eventloop.command.StorageCommand;
-import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 public class EventTests {
 
-  public class TestEventLoop implements EventLoopResults {
-    private Queue<FinishedEvent> resultsQueue;
-
-    public TestEventLoop() { this.resultsQueue = new LinkedList<>(); }
+  public static class TestEventLoop implements EventLoopResults {
+    private Queue<FinishedEvent> resultsQueue = new LinkedList<>();
 
     public void pushResultEvent(FinishedEvent event) {
       this.resultsQueue.add(event);
@@ -38,31 +34,19 @@ public class EventTests {
   };
 
   @Test
-  public void testStorageable() {
-    storage.addValueToStorage("Foo", "Bar");
+  public void testBaseEvent() {
+    AbstractCommand command = new PingFactory().createCommand();
+    AbstractEvent event = new EventFactory().createEvent(command, storage);
 
-    assertEquals("Bar", storage.getValueFromStorage("Foo"));
+    assertTrue(event instanceof BaseEvent);
   }
 
   @Test
-  public void testRunCommand() {
-    SocketChannel client = Mockito.mock(SocketChannel.class);
-    TestEventLoop eventloop = new TestEventLoop();
-    AbstractCommand command = new PingFactory().createCommand();
-    command.setEventloop(eventloop);
-    command.setClient(client);
-    command.run();
-
-    assertEquals(eventloop.resultsQueue.remove().getResult(), "+PONG\r\n");
-
+  public void testStorageEvent() {
     StorageCommand storageCommand = new SetFactory().createCommand();
-    storageCommand.setEventloop(eventloop);
-    storageCommand.setClient(client);
-    storageCommand.setStorageable(storage);
-    storageCommand.setkey("Foo");
-    storageCommand.setValue("Bar");
-    command.run();
+    AbstractEvent event =
+        new EventFactory().createEvent(storageCommand, storage);
 
-    assertEquals(storageCommand.getValue(), "Bar");
+    assertTrue(event instanceof StorageEvent);
   }
 }

@@ -2,17 +2,20 @@ package eventloop.command;
 
 import eventloop.event.FinishedEvent;
 import eventloop.event.Storageable;
+import eventloop.event.StorageableWithTimeout;
 
-public class Set extends StorageCommand {
-  private Storageable storageable;
+public class SetWithTimeout extends StorageCommand {
+  private int timeout;
+  private StorageableWithTimeout storageable;
 
-  public Set() {
+  public SetWithTimeout(int timeout) {
     this.key = "";
     this.value = "";
     this.wasSuccesfull = true;
+    this.timeout = timeout;
   }
 
-  public Set(String key, String value) {
+  public SetWithTimeout(String key, String value) {
     this.key = key;
     this.value = value;
     this.wasSuccesfull = true;
@@ -20,13 +23,17 @@ public class Set extends StorageCommand {
 
   @Override
   public void setStorageable(Storageable storageable) {
-    this.storageable = storageable;
+    this.storageable = (StorageableWithTimeout)storageable;
   }
 
   @Override
-  public Storageable getStorageable() {
+  public StorageableWithTimeout getStorageable() {
     return storageable;
   }
+
+  public void setTimeout(int timeout) { this.timeout = timeout; }
+
+  public int getTimeout() { return timeout; }
 
   @Override
   public String toCLRF() {
@@ -42,5 +49,8 @@ public class Set extends StorageCommand {
     String result = this.toCLRF();
     FinishedEvent resultEvent = new FinishedEvent(result, this.client);
     this.eventloop.pushResultEvent(resultEvent);
+    if (timeout > 0) {
+      this.getStorageable().deleteKeyWithTimeout(this.key, this.timeout);
+    }
   }
 }

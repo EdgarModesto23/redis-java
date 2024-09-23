@@ -1,8 +1,10 @@
 package eventloop.command;
 
 import eventloop.event.FinishedEvent;
+import eventloop.event.Storageable;
 
 public class Get extends StorageCommand {
+  private Storageable storageable;
 
   public Get() {
     this.key = "";
@@ -17,11 +19,21 @@ public class Get extends StorageCommand {
   }
 
   @Override
+  public void setStorageable(Storageable storageable) {
+    this.storageable = storageable;
+  }
+
+  @Override
+  public Storageable getStorageable() {
+    return storageable;
+  }
+
+  @Override
   public String toCLRF() {
     if (this.wasSuccesfull) {
       return String.format("$%d\r\n%s\r\n", this.value.length(), this.value);
     }
-    return "-1\r\n";
+    return "$-1\r\n";
   }
 
   @Override

@@ -15,7 +15,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import parser.Parser;
 
-public class EventLoop implements EventLoopResults, Storageable {
+public class EventLoop implements EventLoopResults, StorageableWithTimeout {
   private Selector selector;
   private ServerSocketChannel serverSocket;
   private Queue<AbstractEvent> processQueue;
@@ -28,6 +28,21 @@ public class EventLoop implements EventLoopResults, Storageable {
     this.processQueue = new LinkedList<>();
     this.resultsQueue = new LinkedList<>();
     this.storage = new HashMap<>();
+  }
+
+  public void deleteKeyFromStorageable(String key) { this.storage.remove(key); }
+
+  public void deleteKeyWithTimeout(String key, int timeout) {
+    Runnable deleteKey = () -> {
+      try {
+        Thread.sleep(timeout);
+        this.deleteKeyFromStorageable(key);
+      } catch (InterruptedException e) {
+        System.out.println(e);
+      }
+    };
+    Thread thread = new Thread(deleteKey);
+    thread.start();
   }
 
   public String getValueFromStorage(String key) {
