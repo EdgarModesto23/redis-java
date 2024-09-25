@@ -1,6 +1,8 @@
 package parser;
 
 import eventloop.command.AbstractCommand;
+import eventloop.command.ConfigCommand;
+import eventloop.command.ConfigCommandFactory;
 import eventloop.command.Echo;
 import eventloop.command.EchoFactory;
 import eventloop.command.ErrorCommand;
@@ -10,6 +12,7 @@ import eventloop.command.GetFactory;
 import eventloop.command.PingFactory;
 import eventloop.command.SetFactory;
 import eventloop.command.StorageCommand;
+import eventloop.event.config.Config;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -85,6 +88,15 @@ public class Parser {
       Get get = new GetFactory().createCommand();
       get.setkey(data.get(1));
       return get;
+
+    case "CONFIG":
+      if (data.size() < 3) {
+        return getErrorCommand("usage: CONFIG [GET/SET] <value> ...");
+      }
+      ConfigCommand config = new ConfigCommandFactory().createCommand();
+      config.setSubcommand(data.get(1));
+      config.setValues(new ArrayList<>(data.subList(2, data.size())));
+      return config;
 
     default:
       return getErrorCommand(

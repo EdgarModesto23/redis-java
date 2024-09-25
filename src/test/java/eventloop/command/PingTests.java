@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import eventloop.event.EventLoopResults;
 import eventloop.event.FinishedEvent;
+import eventloop.event.config.Config;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -13,7 +14,11 @@ import org.mockito.Mockito;
 public class PingTests {
 
   public static class TestEventLoop implements EventLoopResults {
+    private Config config;
     private Queue<FinishedEvent> resultsQueue = new LinkedList<>();
+    public void setConfig(Config config) { this.config = config; }
+
+    public Config getConfig() { return this.config; }
 
     public void pushResultEvent(FinishedEvent event) {
       this.resultsQueue.add(event);

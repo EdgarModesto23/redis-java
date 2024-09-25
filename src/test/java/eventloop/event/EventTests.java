@@ -7,19 +7,9 @@ import eventloop.command.PingFactory;
 import eventloop.command.SetFactory;
 import eventloop.command.StorageCommand;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
 import org.junit.jupiter.api.Test;
 
 public class EventTests {
-
-  public static class TestEventLoop implements EventLoopResults {
-    private Queue<FinishedEvent> resultsQueue = new LinkedList<>();
-
-    public void pushResultEvent(FinishedEvent event) {
-      this.resultsQueue.add(event);
-    }
-  }
 
   public static Storageable storage = new Storageable() {
     private HashMap<String, String> storage = new HashMap<>() {};

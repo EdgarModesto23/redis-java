@@ -1,6 +1,7 @@
 package eventloop.event;
 
 import eventloop.command.AbstractCommand;
+import eventloop.event.config.Config;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -21,14 +22,21 @@ public class EventLoop implements EventLoopResults, StorageableWithTimeout {
   private Queue<AbstractEvent> processQueue;
   private Queue<FinishedEvent> resultsQueue;
   private HashMap<String, String> storage;
+  private Config config;
 
-  public EventLoop(Selector selector, ServerSocketChannel serverSocket) {
+  public EventLoop(Selector selector, ServerSocketChannel serverSocket,
+                   Config config) {
     this.selector = selector;
     this.serverSocket = serverSocket;
     this.processQueue = new LinkedList<>();
     this.resultsQueue = new LinkedList<>();
     this.storage = new HashMap<>();
+    this.config = config;
   }
+
+  public void setConfig(Config config) { this.config = config; }
+
+  public Config getConfig() { return this.config; }
 
   public void deleteKeyFromStorageable(String key) { this.storage.remove(key); }
 
@@ -62,8 +70,7 @@ public class EventLoop implements EventLoopResults, StorageableWithTimeout {
   }
 
   public final void setup() throws IOException {
-    int port = 6379;
-    this.serverSocket.bind(new InetSocketAddress(port));
+    this.serverSocket.bind(new InetSocketAddress(this.config.getPort()));
     this.serverSocket.configureBlocking(false);
     this.serverSocket.register(selector, SelectionKey.OP_ACCEPT);
   }
