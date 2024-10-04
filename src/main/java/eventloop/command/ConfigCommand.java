@@ -28,7 +28,6 @@ public class ConfigCommand extends AbstractCommand {
     EventLoopResults eventloop = this.getEventloop();
     for (String value : this.values) {
       String configVal = eventloop.getConfig().getFieldValue(value);
-      System.out.println(configVal);
       if (configVal == null || configVal.isEmpty()) {
         continue;
       }

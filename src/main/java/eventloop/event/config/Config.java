@@ -5,16 +5,16 @@ import java.util.HashMap;
 import java.util.Objects;
 
 public class Config {
-  private int port;
-  private String dir;
-  private String dbfilename;
   private HashMap<String, String> fieldsMap;
 
   public Config() {
-    this.port = 6379;
-    this.dir = null;
-    this.dbfilename = null;
-    this.fieldsMap = new HashMap<>();
+    this.fieldsMap = new HashMap<>() {
+      {
+        put("dir", "/var/opt/");
+        put("dbfilename", "dump.rdb");
+        put("port", "6379");
+      }
+    };
   }
 
   public void setFieldValue(String key, String value) {
@@ -44,26 +44,22 @@ public class Config {
     return true;
   }
 
-  public int getPort() { return port; }
+  public int getPort() { return Integer.parseInt(this.fieldsMap.get("port")); }
 
-  public void setPort(int port) { this.port = port; }
+  public void setPort(int port) {
+    this.fieldsMap.put("port", Integer.toString(port));
+  }
 
-  public String getDbfilename() { return dbfilename; }
-
-  public String getDir() { return dir; }
-
-  public void setDir(String dir) { this.dir = dir; }
-
-  public void setDbfilename(String dbfilename) { this.dbfilename = dbfilename; }
-
-  public static boolean contains(String fieldname) {
-    Field[] fields = Config.class.getDeclaredFields();
-    for (Field field : fields) {
-      if (field.getName().equals(fieldname)) {
-        return true;
-      }
+  public static boolean canBeConvertedToInt(String str) {
+    if (str == null || str.isEmpty()) {
+      return false;
     }
-    return false;
+    try {
+      Integer.parseInt(str);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
   }
 
   public static Config getConfig(String[] args) throws Exception {
@@ -74,29 +70,12 @@ public class Config {
     if (args.length % 2 != 0) {
       throw new Exception("-ERR invalid number of arguments\r\n");
     }
-    Class<Config> configClass = Config.class;
     for (int i = 0; i < args.length; i += 2) {
       String flag = args[i].substring(2);
-      if (!contains(flag)) {
-        throw new Exception(String.format("-ERR invalid flag: ", flag));
+      if (config.fieldsMap.get(flag) == null) {
+        throw new Exception(String.format("Argument: %s not valid.", flag));
       }
-      Field field = configClass.getDeclaredField(flag);
-      field.setAccessible(true);
-      Class<?> type = field.getType();
-      if (type == int.class) {
-        try {
-          field.set(config, Integer.parseInt(args[i + 1]));
-          config.fieldsMap.put(field.getName(), args[i + 1]);
-        } catch (NumberFormatException e) {
-          throw new Exception(String.format("-ERR invalid value %s for: %s ",
-                                            args[i + 1], flag));
-        }
-      } else if (type == String.class) {
-        field.set(config, args[i + 1]);
-        config.fieldsMap.put(field.getName(), args[i + 1]);
-      } else {
-        throw new Exception("-ERR invalid type on: " + flag);
-      }
+      config.fieldsMap.put(flag, args[i + 1]);
     }
     return config;
   }
